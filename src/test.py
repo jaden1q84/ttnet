@@ -46,6 +46,9 @@ def main_worker(gpu_idx, configs):
     if configs.gpu_idx is not None:
         print("Use GPU: {} for training".format(configs.gpu_idx))
         configs.device = torch.device('cuda:{}'.format(configs.gpu_idx))
+    else:
+        print("Use CPU for training")
+        configs.device = torch.device('cpu')
 
     if configs.distributed:
         if configs.dist_url == "env://" and configs.rank == -1:
@@ -136,7 +139,8 @@ def test(test_loader, model, configs):
                 # Process local ball stage
                 if pred_ball_local is not None:
                     # Get target
-                    local_ball_pos_xy = local_ball_pos_xy.cpu().numpy()  # Ground truth of the local stage
+                    #local_ball_pos_xy = local_ball_pos_xy.cpu().numpy()  # Ground truth of the local stage
+                    local_ball_pos_xy = local_ball_pos_xy  # Ground truth of the local stage
                     sample_local_ball_pos_xy = local_ball_pos_xy[sample_idx]  # Target
                     # Process the local stage
                     sample_pred_ball_local = pred_ball_local[sample_idx]

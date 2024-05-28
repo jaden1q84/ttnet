@@ -152,6 +152,10 @@ def make_data_parallel(model, configs):
     elif configs.gpu_idx is not None:
         torch.cuda.set_device(configs.gpu_idx)
         model = model.cuda(configs.gpu_idx)
+    elif configs.no_cuda is not None:
+        # for cpu device
+        model.cpu()
+        return model
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
         model = torch.nn.DataParallel(model).cuda()

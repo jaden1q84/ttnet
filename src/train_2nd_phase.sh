@@ -10,7 +10,7 @@ python main.py \
   --lr_type 'step_lr' \
   --lr_step_size 10 \
   --lr_factor 0.1 \
-  --gpu_idx 0 \
+  --no_cuda \
   --global_weight 0. \
   --seg_weight 0. \
   --event_weight 2. \

@@ -221,8 +221,8 @@ class TTNet(nn.Module):
 
     def __normalize__(self, x):
         if not self.mean.is_cuda:
-            self.mean = self.mean.cuda()
-            self.std = self.std.cuda()
+            self.mean = self.mean.cuda() if torch.cuda.is_available() else self.mean.cpu()
+            self.std = self.std.cuda() if torch.cuda.is_available() else self.std.cpu()
 
         return (x / 255. - self.mean) / self.std
 
@@ -315,10 +315,14 @@ class TTNet(nn.Module):
 
 if __name__ == '__main__':
     tasks = ['global', 'local', 'event', 'seg']
-    ttnet = TTNet(dropout_p=0.5, tasks=tasks, input_size=(320, 128), thresh_ball_pos_mask=0.01,
+    if torch.cuda.is_available():
+        ttnet = TTNet(dropout_p=0.5, tasks=tasks, input_size=(320, 128), thresh_ball_pos_mask=0.01,
                   num_frames_sequence=9).cuda()
-    resize_batch_input = torch.rand((10, 27, 128, 320)).cuda()
-    org_ball_pos_xy = torch.rand((10, 2)).cuda()
+    else:
+        ttnet = TTNet(dropout_p=0.5, tasks=tasks, input_size=(320, 128), thresh_ball_pos_mask=0.01,
+                  num_frames_sequence=9).cpu()
+    resize_batch_input = torch.rand((10, 27, 128, 320)).cuda() if torch.cuda.is_available() else torch.rand((10, 27, 128, 320)).cpu()
+    org_ball_pos_xy = torch.rand((10, 2)).cuda() if torch.cuda.is_available() else torch.rand((10, 2)).cpu()
     pred_ball_global, pred_ball_local, pred_events, pred_seg, local_ball_pos_xy = ttnet(resize_batch_input,
                                                                                         org_ball_pos_xy)
     if pred_ball_global is not None:

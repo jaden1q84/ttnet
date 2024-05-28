@@ -56,7 +56,7 @@ def main_worker(gpu_idx, configs):
 
     if configs.gpu_idx is not None:
         print("Use GPU: {} for training".format(configs.gpu_idx))
-        configs.device = torch.device('cuda:{}'.format(configs.gpu_idx))
+        configs.device = torch.device('cuda:{}'.format(configs.gpu_idx)) if torch.cuda.is_available() else torch.device('cpu')
 
     if configs.distributed:
         if configs.dist_url == "env://" and configs.rank == -1:
@@ -231,7 +231,7 @@ def train_one_epoch(train_loader, model, optimizer, epoch, configs, logger):
             reduced_loss = total_loss.data
         losses.update(to_python_float(reduced_loss), batch_size)
         # measure elapsed time
-        torch.cuda.synchronize()
+        torch.cuda.synchronize() if torch.cuda.is_available() else torch.cpu.synchronize()
         batch_time.update(time.time() - start_time)
 
         # Log message
@@ -274,7 +274,7 @@ def evaluate_one_epoch(val_loader, model, epoch, configs, logger):
                 reduced_loss = total_loss.data
             losses.update(to_python_float(reduced_loss), batch_size)
             # measure elapsed time
-            torch.cuda.synchronize()
+            torch.cuda.synchronize() if torch.cuda.is_available() else torch.cpu.synchronize()
             batch_time.update(time.time() - start_time)
 
             # Log message
