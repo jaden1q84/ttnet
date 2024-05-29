@@ -166,7 +166,6 @@ if __name__ == '__main__':
         print('Counter val_events_labels: {}'.format(Counter(val_events_labels)))
     event_name = 'net'
     event_class = configs.events_dict[event_name]
-    configs.device = torch.device('cpu')
     ball_position_xy = np.array([100, 50])
     target_ball_position = create_target_ball(ball_position_xy, sigma=0.5, w=320, h=128, thresh_mask=0.01,
                                               device=configs.device)

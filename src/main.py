@@ -56,7 +56,7 @@ def main_worker(gpu_idx, configs):
 
     if configs.gpu_idx is not None:
         print("Use GPU: {} for training".format(configs.gpu_idx))
-        configs.device = torch.device('cuda:{}'.format(configs.gpu_idx)) if torch.cuda.is_available() else torch.device('cpu')
+        configs.device = torch.device('cuda:{}'.format(configs.gpu_idx))
 
     if configs.distributed:
         if configs.dist_url == "env://" and configs.rank == -1:
@@ -195,6 +195,13 @@ def main_worker(gpu_idx, configs):
 def cleanup():
     dist.destroy_process_group()
 
+def torch_synchronize():
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+    elif torch.backends.mps.is_built():
+        torch.mps.synchronize()
+    else:
+        torch.cpu.synchronize()
 
 def train_one_epoch(train_loader, model, optimizer, epoch, configs, logger):
     batch_time = AverageMeter('Time', ':6.3f')
@@ -211,7 +218,7 @@ def train_one_epoch(train_loader, model, optimizer, epoch, configs, logger):
             tqdm(train_loader)):
         data_time.update(time.time() - start_time)
         batch_size = resized_imgs.size(0)
-        target_seg = target_seg.to(configs.device, non_blocking=True)
+        target_seg = target_seg.to(configs.device, dtype=torch.float32, non_blocking=True)
         resized_imgs = resized_imgs.to(configs.device, non_blocking=True).float()
         pred_ball_global, pred_ball_local, pred_events, pred_seg, local_ball_pos_xy, total_loss, _ = model(
             resized_imgs, org_ball_pos_xy, global_ball_pos_xy, target_events, target_seg)
@@ -231,7 +238,8 @@ def train_one_epoch(train_loader, model, optimizer, epoch, configs, logger):
             reduced_loss = total_loss.data
         losses.update(to_python_float(reduced_loss), batch_size)
         # measure elapsed time
-        torch.cuda.synchronize() if torch.cuda.is_available() else torch.cpu.synchronize()
+        torch_synchronize()
+
         batch_time.update(time.time() - start_time)
 
         # Log message
@@ -259,7 +267,7 @@ def evaluate_one_epoch(val_loader, model, epoch, configs, logger):
                 tqdm(val_loader)):
             data_time.update(time.time() - start_time)
             batch_size = resized_imgs.size(0)
-            target_seg = target_seg.to(configs.device, non_blocking=True)
+            target_seg = target_seg.to(configs.device, dtype=torch.float32, non_blocking=True)
             resized_imgs = resized_imgs.to(configs.device, non_blocking=True).float()
             pred_ball_global, pred_ball_local, pred_events, pred_seg, local_ball_pos_xy, total_loss, _ = model(
                 resized_imgs, org_ball_pos_xy, global_ball_pos_xy, target_events, target_seg)
@@ -274,7 +282,7 @@ def evaluate_one_epoch(val_loader, model, epoch, configs, logger):
                 reduced_loss = total_loss.data
             losses.update(to_python_float(reduced_loss), batch_size)
             # measure elapsed time
-            torch.cuda.synchronize() if torch.cuda.is_available() else torch.cpu.synchronize()
+            torch_synchronize()
             batch_time.update(time.time() - start_time)
 
             # Log message

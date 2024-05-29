@@ -181,7 +181,16 @@ def parse_configs():
     ####################################################################
     ############## Hardware configurations ############################
     ####################################################################
-    configs.device = torch.device('cpu' if configs.no_cuda else 'cuda')
+    has_gpu = torch.cuda.is_available()
+    has_mps = torch.backends.mps.is_built()
+    device = "mps" if torch.backends.mps.is_built() \
+        else "cuda" if torch.cuda.is_available() else "cpu"
+    
+    print("GPU is", "available" if has_gpu else "NOT AVAILABLE")
+    print("MPS (Apple Metal) is", "AVAILABLE" if has_mps else "NOT AVAILABLE")
+    print(f"Target device is {device}")
+
+    configs.device = torch.device(device)
     configs.ngpus_per_node = torch.cuda.device_count()
 
     configs.pin_memory = True

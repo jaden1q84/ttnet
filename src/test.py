@@ -46,9 +46,6 @@ def main_worker(gpu_idx, configs):
     if configs.gpu_idx is not None:
         print("Use GPU: {} for training".format(configs.gpu_idx))
         configs.device = torch.device('cuda:{}'.format(configs.gpu_idx))
-    else:
-        print("Use CPU for training")
-        configs.device = torch.device('cpu')
 
     if configs.distributed:
         if configs.dist_url == "env://" and configs.rank == -1:
@@ -72,6 +69,7 @@ def main_worker(gpu_idx, configs):
 
     if configs.pretrained_path is not None:
         model = load_pretrained_model(model, configs.pretrained_path, gpu_idx, configs.overwrite_global_2_local)
+
     # Load dataset
     test_loader = create_test_dataloader(configs)
     test(test_loader, model, configs)
@@ -101,7 +99,7 @@ def test(test_loader, model, configs):
 
             data_time.update(time.time() - start_time)
             batch_size = resized_imgs.size(0)
-            target_seg = target_seg.to(configs.device, non_blocking=True)
+            target_seg = target_seg.to(configs.device, dtype=torch.float32, non_blocking=True)
             resized_imgs = resized_imgs.to(configs.device, non_blocking=True).float()
             # compute output
 

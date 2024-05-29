@@ -56,5 +56,10 @@ class ProgressMeter(object):
 
 
 def time_synchronized():
-    torch.cuda.synchronize() if torch.cuda.is_available() else None
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+    elif torch.backends.mps.is_built():
+        torch.mps.synchronize()
+    else:
+        torch.cpu.synchronize()
     return time.time()

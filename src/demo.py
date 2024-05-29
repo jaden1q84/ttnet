@@ -35,11 +35,9 @@ def demo(configs):
         if not os.path.isdir(configs.frame_dir):
             os.makedirs(configs.frame_dir)
 
-    configs.device = torch.device('cuda:{}'.format(configs.gpu_idx)) if torch.cuda.is_available() else torch.device('cpu')
-
     # model
     model = create_model(configs)
-    model.cuda() if torch.cuda.is_available() else model.cpu()
+    model.to(configs.device)
 
     assert configs.pretrained_path is not None, "Need to load the pre-trained model"
     model = load_pretrained_model(model, configs.pretrained_path, configs.gpu_idx, configs.overwrite_global_2_local)

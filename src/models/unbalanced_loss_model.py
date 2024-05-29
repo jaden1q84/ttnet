@@ -64,7 +64,7 @@ class Unbalance_Loss_Model(nn.Module):
 
         if pred_events is not None:
             task_idx += 1
-            target_events = target_events.to(device=self.device)
+            target_events = target_events.float().to(device=self.device)
             event_loss = self.event_loss_criterion(pred_events, target_events)
             total_loss += event_loss * self.tasks_loss_weight[task_idx]
 

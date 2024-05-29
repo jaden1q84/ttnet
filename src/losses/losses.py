@@ -31,7 +31,13 @@ class Events_Spotting_Loss(nn.Module):
         self.epsilon = epsilon
 
     def forward(self, pred_events, target_events):
-        self.weights = self.weights.cuda() if torch.cuda.is_available() else self.weights.cpu()
+        if torch.cuda.is_available():
+            self.weights = self.weights.cuda()
+        elif torch.backends.mps.is_built():
+            self.weights = self.weights.to('mps')
+        else:
+            self.weights = self.weights.cpu()
+        
         return - torch.mean(self.weights * (target_events * torch.log(pred_events + self.epsilon) + (1. - target_events) * torch.log(1 - pred_events + self.epsilon)))
 
 

@@ -26,7 +26,7 @@ def create_model(configs):
     if configs.arch == 'ttnet':
         ttnet_model = TTNet(dropout_p=configs.dropout_p, tasks=configs.tasks, input_size=configs.input_size,
                             thresh_ball_pos_mask=configs.thresh_ball_pos_mask,
-                            num_frames_sequence=configs.num_frames_sequence)
+                            num_frames_sequence=configs.num_frames_sequence).to(configs.device)
     else:
         assert False, 'Undefined model backbone'
 
@@ -34,12 +34,14 @@ def create_model(configs):
         model = Multi_Task_Learning_Model(ttnet_model, tasks=configs.tasks, num_events=configs.num_events,
                                           weights_events=configs.events_weights_loss,
                                           input_size=configs.input_size, sigma=configs.sigma,
-                                          thresh_ball_pos_mask=configs.thresh_ball_pos_mask, device=configs.device)
+                                          thresh_ball_pos_mask=configs.thresh_ball_pos_mask, device=configs.device).to(configs.device)
     else:
         model = Unbalance_Loss_Model(ttnet_model, tasks_loss_weight=configs.tasks_loss_weight,
                                      weights_events=configs.events_weights_loss, input_size=configs.input_size,
                                      sigma=configs.sigma, thresh_ball_pos_mask=configs.thresh_ball_pos_mask,
-                                     device=configs.device)
+                                     device=configs.device).to(configs.device)
+
+    print(f"Created model, target device is {configs.device}")
 
     return model
 
@@ -83,7 +85,8 @@ def load_pretrained_model(model, pretrained_path, gpu_idx, overwrite_global_2_lo
     """Load weights from the pretrained model"""
     assert os.path.isfile(pretrained_path), "=> no checkpoint found at '{}'".format(pretrained_path)
     if gpu_idx is None:
-        checkpoint = torch.load(pretrained_path, map_location='cpu')
+        checkpoint = torch.load(pretrained_path, map_location='mps') if torch.backends.mps.is_built() \
+            else torch.load(pretrained_path, map_location='cpu')
     else:
         # Map model to be loaded to specified single gpu.
         loc = 'cuda:{}'.format(gpu_idx)
@@ -118,7 +121,8 @@ def resume_model(resume_path, arch, gpu_idx):
     """Resume training model from the previous trained checkpoint"""
     assert os.path.isfile(resume_path), "=> no checkpoint found at '{}'".format(resume_path)
     if gpu_idx is None:
-        checkpoint = torch.load(resume_path, map_location='cpu')
+        checkpoint = torch.load(resume_path, map_location='mps') if torch.backends.mps.is_built() \
+            else torch.load(resume_path, map_location='cpu')
     else:
         # Map model to be loaded to specified single gpu.
         loc = 'cuda:{}'.format(gpu_idx)
@@ -153,9 +157,8 @@ def make_data_parallel(model, configs):
         torch.cuda.set_device(configs.gpu_idx)
         model = model.cuda(configs.gpu_idx)
     elif configs.no_cuda is not None:
-        # for cpu device
-        model.cpu()
-        return model
+        # for mps / cpu device
+        model = model.to('mps') if torch.backends.mps.is_built() else model.to('cpu')
     else:
         # DataParallel will divide and allocate batch_size to all available GPUs
         model = torch.nn.DataParallel(model).cuda()

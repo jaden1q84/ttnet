@@ -221,8 +221,8 @@ class TTNet(nn.Module):
 
     def __normalize__(self, x):
         if not self.mean.is_cuda:
-            self.mean = self.mean.cuda() if torch.cuda.is_available() else self.mean.cpu()
-            self.std = self.std.cuda() if torch.cuda.is_available() else self.std.cpu()
+            self.mean = self.mean.to('mps') if torch.backends.mps.is_built() else self.mean.to('cpu')
+            self.std = self.std.to('mps') if torch.backends.mps.is_built() else self.std.to('cpu')
 
         return (x / 255. - self.mean) / self.std
 
@@ -318,6 +318,9 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         ttnet = TTNet(dropout_p=0.5, tasks=tasks, input_size=(320, 128), thresh_ball_pos_mask=0.01,
                   num_frames_sequence=9).cuda()
+    elif torch.backends.mps.is_built():
+        ttnet = TTNet(dropout_p=0.5, tasks=tasks, input_size=(320, 128), thresh_ball_pos_mask=0.01,
+                  num_frames_sequence=9).to("mps")
     else:
         ttnet = TTNet(dropout_p=0.5, tasks=tasks, input_size=(320, 128), thresh_ball_pos_mask=0.01,
                   num_frames_sequence=9).cpu()

@@ -15,7 +15,7 @@ def post_processing(pred_ball_global, pred_ball_local, pred_events, pred_seg, w,
 def get_prediction_ball_pos(pred_ball, w, thresh_ball_pos_prob):
     if pred_ball.is_cuda:
         pred_ball = pred_ball.cpu()
-    pred_ball = torch.squeeze(pred_ball).numpy()
+    pred_ball = torch.squeeze(pred_ball).cpu().numpy()
     pred_ball[pred_ball < thresh_ball_pos_prob] = 0.
     prediction_ball_x = np.argmax(pred_ball[:w])
     prediction_ball_y = np.argmax(pred_ball[w:])
@@ -26,7 +26,7 @@ def get_prediction_ball_pos(pred_ball, w, thresh_ball_pos_prob):
 def prediction_get_events(pred_events, event_thresh):
     if pred_events.is_cuda:
         pred_events = pred_events.cpu()
-    pred_events = torch.squeeze(pred_events).numpy()
+    pred_events = torch.squeeze(pred_events).cpu().numpy()
     # prediction_events = (pred_events > event_thresh).astype(int)
     prediction_events = pred_events
     return prediction_events
@@ -35,7 +35,7 @@ def prediction_get_events(pred_events, event_thresh):
 def get_prediction_seg(pred_seg, seg_thresh):
     if pred_seg.is_cuda:
         pred_seg = pred_seg.cpu()
-    pred_seg = torch.squeeze(pred_seg).numpy().transpose(1, 2, 0)
+    pred_seg = torch.squeeze(pred_seg).cpu().numpy().transpose(1, 2, 0)
     prediction_seg = (pred_seg > seg_thresh).astype(int)
 
     return prediction_seg
