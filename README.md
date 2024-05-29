@@ -121,6 +121,34 @@ _**Second machine**_
 python main.py --dist-url 'tcp://IP_OF_NODE2:FREEPORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 1
 ```
 
+##### 2.3.1.2. Single machine, CPU or MPS(Apple Silicon Mx CPU)
+
+```shell script
+python main.py --no_cuda --working-dir '../'
+```
+
+By default (as the above command), there are 4 modules in the TTNet model: *global stage, local stage, event spotting, segmentation*.
+You can disable one of the modules, except the global stage module.<br>
+An important note is if you disable the local stage module, the event spotting module will be also disabled.
+
+- You can disable the _**segmentation stage**_:
+
+```shell script
+python main.py --no_cuda --no_seg --working-dir '../'
+```
+
+- You can disable the _**event spotting module**_:
+
+```shell script
+python main.py --no_cuda --no_event --working-dir '../'
+```
+
+- You can disable the _**local stage, event spotting, segmentation modules**_:
+
+```shell script
+python main.py --no_cuda --no_local --no_seg --no_event --working-dir '../'
+```
+
 #### 2.3.2. Training stratergy
 
 The performance of the TTNet strongly depends on the global stage for ball detection. Hence, It's necessary to train the 
