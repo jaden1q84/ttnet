@@ -4,7 +4,7 @@ python demo.py \
   --working-dir '../' \
   --saved_fn 'demo' \
   --arch 'ttnet' \
-  --gpu_idx 0 \
+  --no_cuda \
   --pretrained_path ../checkpoints/ttnet_3rd_phase/ttnet_3rd_phase_epoch_30.pth \
   --seg_thresh 0.5 \
   --event_thresh 0.5 \
